@@ -1,0 +1,37 @@
+{
+  "summary": "Phase 2 E2E testing of SimuTrade Swiss Fintech UI. Backend: 15/15 pytest tests PASS (all auth, market, trading, portfolio endpoints healthy, admin seed idempotency confirmed working, URL-encoded ^VIX works, unauthenticated → 401 correctly). Frontend: landing/auth/dashboard/trading/portfolio/brokers/learn flows work end-to-end; mode toggle persists to localStorage; logout clears token. Two minor issues found: /legal route missing (redirects to landing via catch-all), and Practice Account card on Dashboard has a low-contrast text overlay.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DashboardPage - Practice Account card", "issue": "Summary line '$9,980.96 Available · Used in 0 trades' inside the dark-green Practice Account CTA card renders with very low contrast (dark green text on dark green background) and appears with text-decoration/strikethrough-like styling, making it nearly unreadable. Looks like a class ordering / color token mistake.", "selector": ".Practice Account card inner <p>", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard", "issues": ["Compliance disclaimer banner 'Simulation Platform Only' is only rendered on the public landing page (and as a small 'Practice Mode' pill in the header of authenticated pages). Request asks for full disclaimer visible on Dashboard — consider adding the banner across authenticated Demo-mode routes."]},
+      {"screen": "Routes", "issues": ["/legal route is not defined in App.js — only /terms and /privacy exist. Navigating to /legal falls through to catch-all Navigate to '/'. Either add a /legal landing (index for terms/privacy) or update the nav-link in Layout/Landing that points to /legal to point to /terms."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_simutrade.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Fix low-contrast text inside Dashboard 'Practice Account' card (dark-green on dark-green with odd decoration). Use cream/white body text on the green card.",
+    "Add /legal route in App.js (e.g. index page listing Terms + Privacy) OR update the Landing/Layout 'Legal' link to route to /terms.",
+    "Consider surfacing the 'Simulation Platform Only — All trades use virtual currency' banner on authenticated Demo-mode pages (Dashboard/Trading/Portfolio), not just on /."
+  ],
+  "critical_code_review_comments": [
+    "server.py contains TradeRequest.contracts (float) — field is named 'contracts' but review request used 'quantity'. Accept both or document canonical field.",
+    "Admin seed upsert at ~line 472 is confirmed idempotent — good.",
+    "Mode toggle: ModeContext writes to localStorage only on change, not on first load. Initial value is null (not 'demo'/'practice') until user toggles — add a default write for consistency.",
+    "Logout redirects to /auth (because of ProtectedRoute guard). Request expected redirect to /. Acceptable UX but mismatches spec."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "90%"},
+  "test_credentials": "admin@simutrade.com / SimuTrade2024! (admin, onboarding_complete=true) and test@simutrade.com / Test1234! (user, registered). Auto-test user test_auto@simutrade.com / Test1234! also present from backend_test suite.",
+  "seed_data_creation": "Registered test@simutrade.com and test_auto@simutrade.com via /api/auth/register. One open LONG VIX position remains on admin account (from opening-position test).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest (/app/backend/tests/test_simutrade.py) passes 15/15. Must export REACT_APP_BACKEND_URL before running pytest or it picks up empty BASE_URL. Admin idempotent seed works. Focus next run on (1) Dashboard Practice Account card contrast fix, (2) /legal route addition, (3) verifying disclaimer banner visibility on authenticated pages. Do NOT re-register test users — they exist.",
+  "rca of the issue": "/legal routing: App.js declares routes only for /terms and /privacy; the catch-all '*' Navigates to /. Reproduce: open /legal → lands on landing page (URL rewritten to /). Mitigation: add <Route path='/legal' element={<LegalPage page='terms' />} /> or a small index page linking to both. Dashboard contrast: likely a tailwind class like 'text-primary/30' or a line-through utility applied accidentally on dark card — inspect DashboardPage.js around Practice Account sidebar element."
+}

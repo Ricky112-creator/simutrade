@@ -471,19 +471,26 @@ async def startup():
 
     admin_email = os.environ.get("ADMIN_EMAIL", "admin@simutrade.com")
     admin_password = os.environ.get("ADMIN_PASSWORD", "SimuTrade2024!")
-    if not await db.users.find_one({"email": admin_email}):
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        await db.users.insert_one({
-            "user_id": user_id,
-            "email": admin_email,
-            "name": "Admin",
-            "password_hash": hash_password(admin_password),
-            "role": "admin",
-            "auth_type": "email",
-            "onboarding_complete": True,
-            "balance": STARTING_BALANCE,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
+    # Idempotent upsert: keep existing user_id/balance but always refresh password hash + role
+    await db.users.update_one(
+        {"email": admin_email},
+        {
+            "$set": {
+                "email": admin_email,
+                "name": "Admin",
+                "password_hash": hash_password(admin_password),
+                "role": "admin",
+                "auth_type": "email",
+                "onboarding_complete": True,
+            },
+            "$setOnInsert": {
+                "user_id": f"user_{uuid.uuid4().hex[:12]}",
+                "balance": STARTING_BALANCE,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+        upsert=True,
+    )
 
 
 @app.on_event("shutdown")
