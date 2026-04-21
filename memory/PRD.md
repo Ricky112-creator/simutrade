@@ -37,13 +37,13 @@ Compliance: "Simulation Platform Only" disclaimer visible across the app.
 - [x] /legal route added (alias to terms)
 - [x] Dashboard Practice Account card rendering bug fixed (map was only on one branch)
 - [x] pytest regression suite at `/app/backend/tests/test_simutrade.py` (15/15 passing)
+- [x] Modular backend refactor: `core/` (config, security, market), `models/` (schemas), `routes/` (auth, market, trading, portfolio); `server.py` is now app wiring + startup only
 
 ## Backlog / Roadmap
 ### P1
 - Specific affiliate/referral URLs for Real Mode brokers (user chose to keep current `?ref=simutrade` placeholders until affiliate programs are signed)
 
 ### P2
-- Refactor `server.py` → `/app/backend/routes/*` and `/app/backend/models/*`
 - Settings page: password change, account deletion
 - Learn page: add real curriculum (VIX term structure, contango, etc.)
 - Watchlist persistence per user
