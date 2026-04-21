@@ -27,7 +27,9 @@ Compliance: "Simulation Platform Only" disclaimer visible across the app.
 - [x] FastAPI backend with auth, market, trading, portfolio endpoints
 - [x] MongoDB collections: users, sessions, positions
 - [x] Idempotent admin seed (upsert, $setOnInsert preserves balance)
-- [x] yfinance integration + per-symbol quote cache
+- [x] yfinance integration + 60s per-symbol quote cache (near-live)
+- [x] `POST /api/trading/open` accepts both `contracts` and `quantity` field names
+- [x] Portfolio unrealized P&L recalculated against live VIX quotes on every read
 - [x] Frontend pages: Landing, Auth, Onboarding, Dashboard, Trading, Portfolio, Learn, Settings, RealMode (/brokers), Legal (terms/privacy)
 - [x] AuthContext + ModeContext (demo/real, localStorage persistence, default "demo")
 - [x] Swiss Fintech UI redesign across all pages
@@ -36,22 +38,9 @@ Compliance: "Simulation Platform Only" disclaimer visible across the app.
 - [x] Dashboard Practice Account card rendering bug fixed (map was only on one branch)
 - [x] pytest regression suite at `/app/backend/tests/test_simutrade.py` (15/15 passing)
 
-## API Endpoints
-- `GET /api/health`
-- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`
-- `GET /api/auth/me`, `PUT /api/auth/onboarding`
-- `POST /api/auth/google/session`
-- `GET /api/market/quotes`, `GET /api/market/history/{symbol}`
-- `POST /api/trading/open`, `POST /api/trading/close/{id}`
-- `GET /api/trading/positions`, `GET /api/trading/history`
-- `GET /api/portfolio/summary`
-
 ## Backlog / Roadmap
 ### P1
-- Specific affiliate/referral URLs for Real Mode brokers (user to provide)
-- Portfolio P&L accuracy: recalc unrealized P&L against live VIX quotes
-- Accept both `quantity` and `contracts` field names on `POST /api/trading/open`
-  (testing-agent code-review note)
+- Specific affiliate/referral URLs for Real Mode brokers (user chose to keep current `?ref=simutrade` placeholders until affiliate programs are signed)
 
 ### P2
 - Refactor `server.py` → `/app/backend/routes/*` and `/app/backend/models/*`
@@ -64,6 +53,7 @@ Compliance: "Simulation Platform Only" disclaimer visible across the app.
 - Leaderboard of best simulated returns
 - Export trade history to CSV
 - Email notifications via Resend
+- LLM-powered "Trade of the Day" insights widget (Emergent LLM key)
 
 ## Test Credentials
 See `/app/memory/test_credentials.md`.
