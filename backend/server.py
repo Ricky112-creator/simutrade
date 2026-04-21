@@ -111,7 +111,7 @@ def fetch_quote(symbol: str) -> dict:
     cache_entry = _quote_cache.get(symbol)
     if cache_entry:
         cached_at = datetime.fromisoformat(cache_entry["last_updated"]).replace(tzinfo=timezone.utc)
-        if (datetime.now(timezone.utc) - cached_at).seconds < 300:
+        if (datetime.now(timezone.utc) - cached_at).seconds < 60:
             return cache_entry
 
     try:
@@ -173,7 +173,14 @@ class OnboardingRequest(BaseModel):
 class TradeRequest(BaseModel):
     symbol: str
     direction: str
-    contracts: float
+    contracts: Optional[float] = None
+    quantity: Optional[float] = None
+
+    def size(self) -> float:
+        val = self.contracts if self.contracts is not None else self.quantity
+        if val is None:
+            raise HTTPException(status_code=400, detail="Either 'contracts' or 'quantity' is required")
+        return float(val)
 
 
 # Auth endpoints
@@ -329,7 +336,8 @@ async def open_position(req: TradeRequest, request: Request):
     user = await get_current_user(request)
     if req.direction not in ("long", "short"):
         raise HTTPException(status_code=400, detail="Direction must be 'long' or 'short'")
-    if req.contracts <= 0:
+    size = req.size()
+    if size <= 0:
         raise HTTPException(status_code=400, detail="Contracts must be a positive number")
 
     quote = fetch_quote(req.symbol)
@@ -337,7 +345,7 @@ async def open_position(req: TradeRequest, request: Request):
     if price <= 0:
         raise HTTPException(status_code=400, detail="Unable to get current price for this instrument")
 
-    cost = round(price * req.contracts, 2)
+    cost = round(price * size, 2)
     user_doc = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
     if user_doc["balance"] < cost:
         raise HTTPException(
@@ -352,7 +360,7 @@ async def open_position(req: TradeRequest, request: Request):
         "user_id": user["user_id"],
         "symbol": req.symbol,
         "direction": req.direction,
-        "contracts": req.contracts,
+        "contracts": size,
         "entry_price": price,
         "cost": cost,
         "status": "open",
