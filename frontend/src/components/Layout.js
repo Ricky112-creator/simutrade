@@ -1,124 +1,170 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useMode } from "../contexts/ModeContext";
 import {
-  House, ChartLineUp, Wallet, GraduationCap, Gear, SignOut, List, X
-} from "@phosphor-icons/react";
-
-const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: House },
-  { path: "/trading", label: "Trade", icon: ChartLineUp },
-  { path: "/portfolio", label: "Portfolio", icon: Wallet },
-  { path: "/learn", label: "Learn", icon: GraduationCap },
-  { path: "/settings", label: "Settings", icon: Gear },
-];
+  LayoutDashboard, TrendingUp, Briefcase, BookOpen, Settings,
+  LogOut, Menu, X, ExternalLink, FlaskConical
+} from "lucide-react";
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const { mode, setMode, isDemo } = useMode();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
+  const navItems = [
+    { path: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { path: isDemo ? "/trading" : "/brokers", label: "Trade", icon: TrendingUp },
+    { path: "/portfolio", label: "Portfolio", icon: Briefcase },
+    { path: "/learn", label: "Learn", icon: BookOpen },
+    { path: "/settings", label: "Settings", icon: Settings },
+  ];
+
+  const handleLogout = async () => { await logout(); navigate("/"); };
+
+  const isActive = (path) => {
+    if (path === "/trading" || path === "/brokers") {
+      return location.pathname === "/trading" || location.pathname === "/brokers";
+    }
+    return location.pathname === path;
   };
 
   const SidebarContent = () => (
-    <>
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#C05746] rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm font-outfit">S</span>
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="px-5 py-5 border-b border-slate-200">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-[#0A2540] rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-white font-outfit font-bold text-sm">S</span>
           </div>
-          <span className="font-outfit text-xl font-semibold text-white">SimuTrade</span>
+          <span className="font-outfit text-lg font-semibold text-[#0A2540]">SimuTrade</span>
         </div>
-        <span className="mt-2 inline-block text-[10px] font-manrope font-medium tracking-widest uppercase bg-[#C05746]/20 text-[#C05746] rounded px-2 py-0.5">
-          Demo Mode
-        </span>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      {/* Mode toggle */}
+      <div className="px-4 py-3 border-b border-slate-200">
+        <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 mb-2 px-1">Mode</p>
+        <div className="flex bg-slate-100 rounded-lg p-0.5" data-testid="mode-toggle">
+          <button
+            onClick={() => setMode("demo")}
+            data-testid="mode-demo-btn"
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${
+              isDemo ? "bg-white text-[#0A2540] shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <FlaskConical size={12} strokeWidth={2} />
+            Practice
+          </button>
+          <button
+            onClick={() => setMode("real")}
+            data-testid="mode-live-btn"
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${
+              !isDemo ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <ExternalLink size={12} strokeWidth={2} />
+            Live
+          </button>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map(({ path, label, icon: Icon }) => {
-          const isActive = location.pathname === path;
+          const active = isActive(path);
           return (
             <Link
-              key={path}
+              key={label}
               to={path}
               onClick={() => setMobileOpen(false)}
               data-testid={`nav-${label.toLowerCase()}`}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                isActive
-                  ? "bg-[#2C4C3B] text-white shadow-sm"
-                  : "text-[#7A8C83] hover:text-white hover:bg-white/5"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                active
+                  ? "bg-[#0A2540] text-white"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
               }`}
             >
-              <Icon size={20} weight={isActive ? "fill" : "regular"} />
-              <span className="font-manrope text-sm font-medium">{label}</span>
+              <Icon size={17} strokeWidth={active ? 2 : 1.5} />
+              {label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/10">
-        <div className="flex items-center gap-3 mb-4 px-1">
-          <div className="w-9 h-9 rounded-full bg-[#2C4C3B] flex items-center justify-center text-white text-sm font-semibold font-outfit shrink-0">
+      {/* User */}
+      <div className="px-3 py-4 border-t border-slate-200">
+        <div className="flex items-center gap-3 px-2 mb-3">
+          <div className="w-8 h-8 rounded-full bg-[#0A2540] flex items-center justify-center text-white text-xs font-semibold font-outfit shrink-0">
             {user?.name?.[0]?.toUpperCase() || "U"}
           </div>
           <div className="min-w-0">
-            <p className="text-white text-sm font-medium font-manrope truncate">{user?.name}</p>
-            <p className="text-[#7A8C83] text-xs truncate">{user?.email}</p>
+            <p className="text-[#0F172A] text-sm font-medium truncate">{user?.name}</p>
+            <p className="text-slate-400 text-xs truncate">{user?.email}</p>
           </div>
         </div>
         <button
           onClick={handleLogout}
           data-testid="logout-button"
-          className="flex items-center gap-2 text-[#7A8C83] hover:text-white transition-colors text-sm font-manrope w-full px-1 py-2 rounded-lg hover:bg-white/5"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-xs font-medium w-full px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
         >
-          <SignOut size={16} />
-          Sign out
+          <LogOut size={14} strokeWidth={1.5} /> Sign out
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
-    <div className="flex min-h-screen bg-[#F7F5F0]">
+    <div className="flex min-h-screen bg-[#F8F9FA]">
       {/* Desktop sidebar */}
-      <aside className="w-64 bg-[#1A2421] flex flex-col fixed h-full z-30 hidden md:flex">
+      <aside className="w-60 bg-[#F4F5F7] border-r border-slate-200 fixed h-full z-30 hidden md:flex flex-col">
         <SidebarContent />
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-64 bg-[#1A2421] flex flex-col h-full z-50">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-60 bg-[#F4F5F7] border-r border-slate-200 flex flex-col h-full z-50">
             <SidebarContent />
           </aside>
         </div>
       )}
 
-      {/* Main content */}
-      <main className="md:ml-64 flex-1 min-h-screen flex flex-col">
-        {/* Sticky header */}
-        <header className="sticky top-0 z-20 bg-[#F7F5F0]/90 backdrop-blur-xl border-b border-[#D1CDC3]/60 px-4 md:px-8 py-3 flex items-center justify-between">
+      {/* Main */}
+      <main className="md:ml-60 flex-1 min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="h-14 sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              className="md:hidden text-[#4A5D54] hover:text-[#1A2421]"
-              onClick={() => setMobileOpen(true)}
-            >
-              <List size={22} />
+            <button className="md:hidden text-slate-500 hover:text-slate-900" onClick={() => setMobileOpen(true)}>
+              <Menu size={20} strokeWidth={1.5} />
             </button>
-            <span className="text-xs font-manrope font-semibold tracking-wider uppercase bg-[#C05746]/10 text-[#C05746] border border-[#C05746]/20 rounded-full px-3 py-1">
-              Simulation Only — Not Real Money
+            <span
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                isDemo
+                  ? "bg-slate-50 text-slate-600 border-slate-200"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
+              }`}
+            >
+              {isDemo ? <FlaskConical size={11} /> : <ExternalLink size={11} />}
+              {isDemo ? "Practice Mode" : "Live (External)"}
             </span>
+            {!isDemo && (
+              <span className="hidden sm:inline text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
+                Real trading via partners
+              </span>
+            )}
           </div>
-          <div className="text-sm text-[#4A5D54] font-manrope hidden sm:block">
-            Virtual Balance:{" "}
-            <span className="font-semibold text-[#1A2421] font-mono" data-testid="header-balance">
-              ${(user?.balance ?? 10000).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+          <div className="flex items-center gap-4">
+            {isDemo && (
+              <div className="hidden sm:block text-sm text-slate-500 font-inter">
+                Virtual:{" "}
+                <span className="font-semibold text-[#0A2540] font-outfit" data-testid="header-balance">
+                  ${(user?.balance ?? 10000).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            )}
           </div>
         </header>
 

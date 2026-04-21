@@ -1,7 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ModeProvider } from "./contexts/ModeContext";
 import AuthCallback from "./components/AuthCallback";
+import RealModePage from "./pages/RealModePage";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -48,6 +50,7 @@ function AppRouter() {
       <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
       <Route path="/learn" element={<LearnPage />} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/brokers" element={<ProtectedRoute><RealModePage /></ProtectedRoute>} />
       <Route path="/terms" element={<LegalPage page="terms" />} />
       <Route path="/privacy" element={<LegalPage page="privacy" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -59,7 +62,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRouter />
+        <ModeProvider>
+          <AppRouter />
+        </ModeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

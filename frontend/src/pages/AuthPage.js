@@ -1,16 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { EnvelopeSimple, Lock, User, GoogleLogo, Eye, EyeSlash } from "@phosphor-icons/react";
+import { Mail, Lock, User, Eye, EyeOff, Chrome } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../utils/api";
-
-function formatError(detail) {
-  if (!detail) return "Something went wrong. Please try again.";
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) return detail.map((e) => (e?.msg || JSON.stringify(e))).join(", ");
-  return String(detail);
-}
 
 export default function AuthPage() {
   const [tab, setTab] = useState("login");
@@ -20,232 +13,164 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const update = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }));
 
   const handleGoogle = () => {
-    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
     const redirectUrl = window.location.origin + "/dashboard";
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setError(""); setLoading(true);
     try {
-      const endpoint = tab === "login" ? "/auth/login" : "/auth/register";
-      const payload = tab === "login"
-        ? { email: form.email, password: form.password }
-        : { email: form.email, password: form.password, name: form.name };
-      const res = await api.post(endpoint, payload);
-      const { user, token } = res.data;
-      login(user, token);
-      navigate(user.onboarding_complete ? "/dashboard" : "/onboarding");
+      const ep = tab === "login" ? "/auth/login" : "/auth/register";
+      const body = tab === "login" ? { email: form.email, password: form.password } : form;
+      const res = await api.post(ep, body);
+      login(res.data.user, res.data.token);
+      navigate(res.data.user.onboarding_complete ? "/dashboard" : "/onboarding");
     } catch (err) {
-      setError(formatError(err.response?.data?.detail) || err.message);
-    } finally {
-      setLoading(false);
-    }
+      const d = err.response?.data?.detail;
+      setError(typeof d === "string" ? d : "Something went wrong. Please try again.");
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0] flex font-manrope">
-      {/* Left decorative panel */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden"
-        style={{
-          backgroundImage: `url('https://images.pexels.com/photos/26447275/pexels-photo-26447275.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-[#1A2421]/80" />
+    <div className="min-h-screen bg-white flex font-inter">
+      <div className="hidden lg:flex lg:w-5/12 bg-[#0A2540] flex-col justify-between p-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `url('https://static.prod-images.emergentagent.com/jobs/665453e7-75d6-45f5-8709-92527a0aed60/images/8416bbb983af3d725369b77c67c3ea95cf1e6b2f4308940c69041dbfbb456aec.png')`,
+          backgroundSize: "cover", backgroundPosition: "center",
+        }} />
         <div className="relative z-10">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-[#C05746] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold font-outfit">S</span>
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center">
+              <span className="text-white font-outfit font-bold">S</span>
             </div>
-            <span className="font-outfit text-2xl font-semibold text-white">SimuTrade</span>
+            <span className="font-outfit text-xl font-semibold text-white">SimuTrade</span>
           </Link>
         </div>
-        <div className="relative z-10">
-          <h2 className="font-outfit text-4xl font-semibold text-white mb-4 leading-tight">
-            Learn volatility trading.<br />
-            <span className="text-[#C05746]">Zero risk.</span>
-          </h2>
-          <p className="text-[#7A8C83] leading-relaxed mb-8 text-base">
-            Join thousands of learners mastering the VIX, OVX, and GVZ with $10,000 in virtual currency.
-          </p>
-          <div className="flex gap-6">
-            {[["$10K", "Starting Balance"], ["7", "Indices"], ["Free", "Forever"]].map(([v, l]) => (
-              <div key={l}>
-                <p className="font-mono text-2xl font-semibold text-white">{v}</p>
-                <p className="text-xs text-[#7A8C83]">{l}</p>
+        <div className="relative z-10 space-y-8">
+          <div>
+            <h2 className="font-outfit text-4xl font-semibold text-white leading-tight mb-4">
+              Learn volatility trading.<br /><span className="text-emerald-400">Risk-free.</span>
+            </h2>
+            <p className="text-slate-400 text-base leading-relaxed">Practice with CBOE volatility indices using virtual currency.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {[["$10K", "Virtual Balance"], ["7", "Indices"], ["Free", "Forever"]].map(([v, l]) => (
+              <div key={l} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <p className="font-outfit text-xl font-semibold text-white">{v}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{l}</p>
               </div>
             ))}
           </div>
-        </div>
-        <div className="relative z-10 border border-[#C05746]/30 rounded-xl p-4 bg-[#C05746]/10">
-          <p className="text-xs text-[#C05746] font-medium">
-            SIMULATION ONLY — Virtual currency. No real financial transactions.
-          </p>
+          <div className="bg-amber-500/10 border border-amber-400/20 rounded-xl p-4">
+            <p className="text-xs text-amber-300">Simulation only — no real money. Not affiliated with CBOE or any broker.</p>
+          </div>
         </div>
       </div>
 
-      {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          {/* Mobile logo */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-[#F8F9FA]">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 bg-[#C05746] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm font-outfit">S</span>
+            <div className="w-8 h-8 bg-[#0A2540] rounded-lg flex items-center justify-center">
+              <span className="text-white font-outfit font-bold text-sm">S</span>
             </div>
-            <span className="font-outfit text-xl font-semibold text-[#1A2421]">SimuTrade</span>
+            <span className="font-outfit text-lg font-semibold text-[#0A2540]">SimuTrade</span>
           </Link>
 
-          <h1 className="font-outfit text-3xl font-semibold text-[#1A2421] mb-2">
-            {tab === "login" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p className="text-[#4A5D54] mb-8 text-sm">
-            {tab === "login" ? "Sign in to your SimuTrade account." : "Start your free trading simulation today."}
-          </p>
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-card">
+            <h1 className="font-outfit text-2xl font-semibold text-[#0A2540] mb-1">
+              {tab === "login" ? "Welcome back" : "Create your account"}
+            </h1>
+            <p className="text-slate-500 text-sm mb-7">
+              {tab === "login" ? "Sign in to your SimuTrade account." : "Start learning volatility trading for free."}
+            </p>
 
-          {/* Tab switcher */}
-          <div className="flex bg-[#EAE7E0] rounded-xl p-1 mb-8">
-            {["login", "register"].map((t) => (
-              <button
-                key={t}
-                onClick={() => { setTab(t); setError(""); }}
-                data-testid={`auth-tab-${t}`}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  tab === t ? "bg-white text-[#1A2421] shadow-sm" : "text-[#7A8C83] hover:text-[#4A5D54]"
-                }`}
-              >
-                {t === "login" ? "Sign In" : "Register"}
-              </button>
-            ))}
-          </div>
-
-          {/* Google OAuth */}
-          <button
-            onClick={handleGoogle}
-            data-testid="google-auth-btn"
-            className="w-full flex items-center justify-center gap-3 border border-[#D1CDC3] bg-white rounded-xl py-3 text-sm font-medium text-[#1A2421] hover:border-[#2C4C3B] hover:shadow-sm transition-all duration-200 mb-4"
-          >
-            <GoogleLogo size={20} weight="bold" />
-            Continue with Google
-          </button>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 h-px bg-[#D1CDC3]" />
-            <span className="text-xs text-[#7A8C83]">or continue with email</span>
-            <div className="flex-1 h-px bg-[#D1CDC3]" />
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <AnimatePresence mode="wait">
-              {tab === "register" && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <label className="block text-xs font-medium text-[#4A5D54] mb-1.5 uppercase tracking-wider">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A8C83]" />
-                    <input
-                      type="text"
-                      value={form.name}
-                      onChange={update("name")}
-                      placeholder="Alex Johnson"
-                      required={tab === "register"}
-                      data-testid="register-name-input"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#D1CDC3] bg-white text-[#1A2421] text-sm focus:outline-none focus:border-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B] placeholder:text-[#7A8C83]"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div>
-              <label className="block text-xs font-medium text-[#4A5D54] mb-1.5 uppercase tracking-wider">
-                Email
-              </label>
-              <div className="relative">
-                <EnvelopeSimple size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A8C83]" />
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={update("email")}
-                  placeholder="you@example.com"
-                  required
-                  data-testid="auth-email-input"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#D1CDC3] bg-white text-[#1A2421] text-sm focus:outline-none focus:border-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B] placeholder:text-[#7A8C83]"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-[#4A5D54] mb-1.5 uppercase tracking-wider">
-                Password
-              </label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7A8C83]" />
-                <input
-                  type={showPw ? "text" : "password"}
-                  value={form.password}
-                  onChange={update("password")}
-                  placeholder="Min. 8 characters"
-                  required
-                  minLength={6}
-                  data-testid="auth-password-input"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-[#D1CDC3] bg-white text-[#1A2421] text-sm focus:outline-none focus:border-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B] placeholder:text-[#7A8C83]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7A8C83] hover:text-[#4A5D54]"
-                >
-                  {showPw ? <EyeSlash size={16} /> : <Eye size={16} />}
+            <div className="flex bg-slate-100 rounded-xl p-0.5 mb-6">
+              {["login", "register"].map((t) => (
+                <button key={t} onClick={() => { setTab(t); setError(""); }} data-testid={`auth-tab-${t}`}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    tab === t ? "bg-white text-[#0A2540] shadow-sm" : "text-slate-400 hover:text-slate-600"
+                  }`}>
+                  {t === "login" ? "Sign In" : "Register"}
                 </button>
-              </div>
+              ))}
             </div>
 
-            {error && (
-              <div data-testid="auth-error" className="bg-[#C05746]/10 border border-[#C05746]/20 rounded-xl p-3 text-sm text-[#C05746]">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              data-testid="auth-submit-btn"
-              className="w-full bg-[#2C4C3B] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#1E362A] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Please wait..." : tab === "login" ? "Sign In" : "Create Account"}
+            <button onClick={handleGoogle} data-testid="google-auth-btn"
+              className="w-full flex items-center justify-center gap-3 border border-slate-200 bg-white rounded-xl py-3 text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all mb-5">
+              <Chrome size={18} strokeWidth={1.5} />Continue with Google
             </button>
-          </form>
 
-          <p className="text-center text-xs text-[#7A8C83] mt-6">
-            By continuing, you agree to our{" "}
-            <Link to="/terms" className="text-[#4A5D54] hover:text-[#1A2421] underline">Terms of Service</Link>{" "}
-            and{" "}
-            <Link to="/privacy" className="text-[#4A5D54] hover:text-[#1A2421] underline">Privacy Policy</Link>.
-          </p>
-          <p className="text-center text-xs text-[#C05746] mt-3 bg-[#C05746]/5 rounded-lg py-2 px-3">
-            This is a simulation platform. No real money is used.
-          </p>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex-1 h-px bg-slate-100" />
+              <span className="text-xs text-slate-400 font-medium">or</span>
+              <div className="flex-1 h-px bg-slate-100" />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <AnimatePresence mode="wait">
+                {tab === "register" && (
+                  <motion.div key="name" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                    <div className="relative">
+                      <User size={15} strokeWidth={1.5} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input type="text" value={form.name} onChange={update("name")} placeholder="Alex Johnson"
+                        required={tab === "register"} data-testid="register-name-input"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A2540]/15 focus:border-[#0A2540] transition-all" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
+                <div className="relative">
+                  <Mail size={15} strokeWidth={1.5} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input type="email" value={form.email} onChange={update("email")} placeholder="you@example.com"
+                    required data-testid="auth-email-input"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A2540]/15 focus:border-[#0A2540] transition-all" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
+                <div className="relative">
+                  <Lock size={15} strokeWidth={1.5} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input type={showPw ? "text" : "password"} value={form.password} onChange={update("password")}
+                    placeholder="Min. 6 characters" required minLength={6} data-testid="auth-password-input"
+                    className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#0A2540]/15 focus:border-[#0A2540] transition-all" />
+                  <button type="button" onClick={() => setShowPw(!showPw)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    {showPw ? <EyeOff size={15} strokeWidth={1.5} /> : <Eye size={15} strokeWidth={1.5} />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div data-testid="auth-error" className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-600 font-medium">
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading} data-testid="auth-submit-btn"
+                className="w-full bg-[#0A2540] text-white py-3 rounded-xl text-sm font-semibold hover:bg-[#051A2E] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                {loading ? "Please wait..." : tab === "login" ? "Sign In" : "Create Account"}
+              </button>
+            </form>
+
+            <p className="text-center text-xs text-slate-400 mt-5">
+              By continuing, you agree to our{" "}
+              <Link to="/terms" className="text-slate-600 hover:text-slate-900 underline">Terms</Link> and{" "}
+              <Link to="/privacy" className="text-slate-600 hover:text-slate-900 underline">Privacy Policy</Link>.
+            </p>
+            <p className="text-center text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg py-2 px-3 mt-3">
+              Simulation platform — no real money involved
+            </p>
+          </div>
         </motion.div>
       </div>
     </div>

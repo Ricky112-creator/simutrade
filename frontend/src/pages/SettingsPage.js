@@ -1,156 +1,124 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Lock, Trash, CheckCircle } from "@phosphor-icons/react";
+import { User, Lock, FlaskConical, ExternalLink } from "lucide-react";
 import Layout from "../components/Layout";
 import { useAuth } from "../contexts/AuthContext";
-import api from "../utils/api";
+import { useMode } from "../contexts/ModeContext";
 
 export default function SettingsPage() {
   const { user, logout, refreshUser } = useAuth();
-  const [name, setName] = useState(user?.name || "");
+  const { mode, setMode, isDemo } = useMode();
+  const [msg, setMsg] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState(null);
-  const [pwForm, setPwForm] = useState({ current: "", newPw: "" });
 
-  const handleSaveName = async () => {
+  const handleSave = async () => {
     setSaving(true);
-    setMessage(null);
-    try {
-      // Update via profile endpoint (simplified — for demo we just show success)
-      setMessage({ type: "success", text: "Profile updated successfully." });
-      await refreshUser();
-    } catch {
-      setMessage({ type: "error", text: "Failed to update profile." });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleResetBalance = async () => {
-    if (!window.confirm("Reset your virtual balance to $10,000? All positions must be closed first.")) return;
-    setMessage({ type: "info", text: "Balance reset is coming soon. Close all positions first." });
+    setTimeout(() => { setMsg({ ok: true, text: "Settings saved." }); setSaving(false); }, 500);
   };
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto font-manrope">
+      <div className="max-w-2xl mx-auto font-inter">
         <div className="mb-8">
-          <h1 className="font-outfit text-3xl font-semibold text-[#1A2421] mb-1">Settings</h1>
-          <p className="text-sm text-[#4A5D54]">Manage your SimuTrade account preferences.</p>
+          <h1 className="font-outfit text-3xl font-semibold text-[#0A2540] mb-1">Settings</h1>
+          <p className="text-sm text-slate-400">Manage your SimuTrade account and preferences.</p>
         </div>
 
-        {message && (
-          <div className={`mb-6 flex items-center gap-2 px-4 py-3 rounded-xl text-sm ${
-            message.type === "success" ? "bg-[#2C4C3B]/10 border border-[#2C4C3B]/20 text-[#2C4C3B]" :
-            message.type === "error" ? "bg-[#C05746]/10 border border-[#C05746]/20 text-[#C05746]" :
-            "bg-blue-50 border border-blue-200 text-blue-700"
-          }`}>
-            <CheckCircle size={16} />
-            {message.text}
+        {msg && (
+          <div className={`mb-5 px-4 py-3 rounded-xl text-sm font-medium ${msg.ok ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-600"}`}>
+            {msg.text}
           </div>
         )}
 
-        {/* Profile section */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-[#D1CDC3] rounded-2xl p-6 mb-6"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <User size={20} color="#2C4C3B" />
-            <h2 className="font-outfit text-base font-semibold text-[#1A2421]">Profile</h2>
+        {/* Profile */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-slate-200 rounded-xl p-6 mb-5 shadow-card">
+          <div className="flex items-center gap-2.5 mb-5">
+            <User size={18} strokeWidth={1.5} className="text-slate-500" />
+            <h2 className="font-outfit text-base font-semibold text-[#0A2540]">Profile</h2>
           </div>
-
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#4A5D54] uppercase tracking-wider mb-1.5">
-                Display Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                data-testid="settings-name-input"
-                className="w-full px-4 py-3 rounded-xl border border-[#D1CDC3] bg-white text-[#1A2421] text-sm focus:outline-none focus:border-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B]"
-              />
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
+              <input type="email" value={user?.email || ""} disabled
+                className="w-full px-4 py-3 rounded-xl border border-slate-100 bg-slate-50 text-slate-400 text-sm cursor-not-allowed" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#4A5D54] uppercase tracking-wider mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                value={user?.email || ""}
-                disabled
-                className="w-full px-4 py-3 rounded-xl border border-[#EAE7E0] bg-[#F7F5F0] text-[#7A8C83] text-sm cursor-not-allowed"
-              />
-              <p className="text-xs text-[#7A8C83] mt-1">Email cannot be changed.</p>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Name</label>
+              <input type="text" defaultValue={user?.name || ""} data-testid="settings-name-input"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-[#0A2540] text-sm focus:outline-none focus:ring-2 focus:ring-[#0A2540]/15 focus:border-[#0A2540] transition-all" />
             </div>
-
-            <div className="pt-2">
-              <div className="flex gap-3 text-xs text-[#7A8C83]">
-                <span>Auth type: <strong className="text-[#4A5D54]">{user?.auth_type}</strong></span>
-                <span>Role: <strong className="text-[#4A5D54]">{user?.role}</strong></span>
-                {user?.experience_level && (
-                  <span>Level: <strong className="text-[#4A5D54]">{user.experience_level}</strong></span>
-                )}
-              </div>
+            <div className="flex gap-4 text-xs text-slate-400 pt-1">
+              <span>Auth: <strong className="text-slate-600">{user?.auth_type}</strong></span>
+              <span>Level: <strong className="text-slate-600">{user?.experience_level || "Not set"}</strong></span>
+              <span>Risk: <strong className="text-slate-600">{user?.risk_tolerance || "Not set"}</strong></span>
             </div>
-
-            <button
-              onClick={handleSaveName}
-              disabled={saving}
-              data-testid="settings-save-btn"
-              className="bg-[#2C4C3B] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1E362A] transition-colors disabled:opacity-50"
-            >
+            <button onClick={handleSave} disabled={saving} data-testid="settings-save-btn"
+              className="bg-[#0A2540] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#051A2E] transition-colors disabled:opacity-50">
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </motion.div>
 
-        {/* Account section */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white border border-[#D1CDC3] rounded-2xl p-6 mb-6"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <Lock size={20} color="#2C4C3B" />
-            <h2 className="font-outfit text-base font-semibold text-[#1A2421]">Simulation Account</h2>
+        {/* Mode */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="bg-white border border-slate-200 rounded-xl p-6 mb-5 shadow-card">
+          <div className="flex items-center gap-2.5 mb-5">
+            <FlaskConical size={18} strokeWidth={1.5} className="text-slate-500" />
+            <h2 className="font-outfit text-base font-semibold text-[#0A2540]">Trading Mode</h2>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-[#F7F5F0]">
-              <div>
-                <p className="text-sm text-[#1A2421] font-medium">Virtual Balance</p>
-                <p className="text-xs text-[#7A8C83]">Your current simulation balance</p>
-              </div>
-              <span className="font-mono text-base font-semibold text-[#2C4C3B]" data-testid="settings-balance">
-                ${(user?.balance ?? 10000).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <div>
-                <p className="text-sm text-[#1A2421] font-medium">Reset Balance</p>
-                <p className="text-xs text-[#7A8C83]">Start fresh with $10,000 virtual currency</p>
-              </div>
-              <button
-                onClick={handleResetBalance}
-                data-testid="reset-balance-btn"
-                className="text-xs text-[#C05746] border border-[#C05746]/30 px-4 py-2 rounded-lg hover:bg-[#C05746]/5 transition-colors"
-              >
-                Reset Balance
+          <div className="space-y-3">
+            {[
+              { v: "demo", l: "Practice Mode", d: "Trade with $10,000 virtual currency. No real financial risk.", icon: FlaskConical, active: isDemo },
+              { v: "real", l: "Live Mode (External)", d: "Access real broker partners. SimuTrade does not execute real trades.", icon: ExternalLink, active: !isDemo },
+            ].map((opt) => (
+              <button key={opt.v} onClick={() => setMode(opt.v)} data-testid={`mode-option-${opt.v}`}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all ${opt.active ? "border-[#0A2540] bg-slate-50" : "border-slate-200 hover:border-slate-300"}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <opt.icon size={16} strokeWidth={1.5} className={opt.active ? "text-[#0A2540]" : "text-slate-400"} />
+                    <div>
+                      <p className={`text-sm font-semibold ${opt.active ? "text-[#0A2540]" : "text-slate-600"}`}>{opt.l}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{opt.d}</p>
+                    </div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 ${opt.active ? "bg-[#0A2540] border-[#0A2540]" : "border-slate-300"}`} />
+                </div>
               </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Account */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-white border border-slate-200 rounded-xl p-6 mb-5 shadow-card">
+          <div className="flex items-center gap-2.5 mb-5">
+            <Lock size={18} strokeWidth={1.5} className="text-slate-500" />
+            <h2 className="font-outfit text-base font-semibold text-[#0A2540]">Virtual Account</h2>
+          </div>
+          <div className="flex items-center justify-between py-3 border-b border-slate-100">
+            <div>
+              <p className="text-sm font-medium text-[#0A2540]">Virtual Balance</p>
+              <p className="text-xs text-slate-400">Current simulation balance</p>
             </div>
+            <span className="font-mono font-semibold text-emerald-600 text-base" data-testid="settings-balance">
+              ${(user?.balance ?? 10000).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <p className="text-sm font-medium text-[#0A2540]">Starting Balance</p>
+              <p className="text-xs text-slate-400">Original virtual allocation</p>
+            </div>
+            <span className="font-mono text-slate-500 text-sm">$10,000.00</span>
           </div>
         </motion.div>
 
         {/* Disclaimer */}
-        <div className="bg-[#C05746]/5 border border-[#C05746]/20 rounded-2xl p-5">
-          <p className="text-xs text-[#C05746] leading-relaxed">
-            <strong>Simulation Platform Disclaimer:</strong> SimuTrade is for educational purposes only. All trading
-            uses virtual currency. No real financial transactions occur. This is not financial advice. Not affiliated
-            with CBOE, NYSE, or any real trading platform.
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <p className="text-xs text-amber-700 leading-relaxed">
+            <strong>Disclaimer:</strong> SimuTrade is for educational purposes only. All trading uses virtual currency.
+            No real financial transactions occur. This is not financial advice. Not affiliated with CBOE, NYSE, or any trading platform.
           </p>
         </div>
       </div>

@@ -1,40 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TrendUp, TrendDown, Wallet, ChartLineUp, ArrowRight, Circle } from "@phosphor-icons/react";
+import { TrendingUp, TrendingDown, Wallet, BarChart2, ArrowRight, Activity } from "lucide-react";
 import Layout from "../components/Layout";
 import api from "../utils/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useMode } from "../contexts/ModeContext";
 
-function MetricCard({ label, value, sub, positive, icon: Icon, delay = 0 }) {
+function MetricCard({ label, value, sub, colorClass = "text-[#0A2540]", i = 0 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay }}
-      className="bg-white border border-[#D1CDC3] rounded-2xl p-6"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <p className="text-xs text-[#7A8C83] font-manrope uppercase tracking-wider">{label}</p>
-        <div className="w-8 h-8 bg-[#F7F5F0] rounded-lg flex items-center justify-center">
-          <Icon size={16} color="#4A5D54" />
-        </div>
-      </div>
-      <p className={`font-mono text-2xl font-semibold mb-1 ${
-        positive === true ? "text-[#2C4C3B]" : positive === false ? "text-[#C05746]" : "text-[#1A2421]"
-      }`} data-testid={`metric-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+      className="bg-white border border-slate-200 rounded-xl p-6 shadow-card">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{label}</p>
+      <p className={`font-outfit text-2xl font-semibold mb-1 ${colorClass}`} data-testid={`metric-${label.toLowerCase().replace(/\s+/g, "-")}`}>
         {value}
       </p>
-      {sub && <p className="text-xs text-[#7A8C83]">{sub}</p>}
+      {sub && <p className="text-xs text-slate-400">{sub}</p>}
     </motion.div>
   );
-}
-
-function formatCurrency(n) {
-  if (n == null) return "$0.00";
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : n > 0 ? "+" : "";
-  return `${sign}$${abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function DashboardPage() {
@@ -43,218 +26,190 @@ export default function DashboardPage() {
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { isDemo } = useMode();
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [pRes, qRes, posRes] = await Promise.all([
-          api.get("/portfolio/summary"),
-          api.get("/market/quotes"),
-          api.get("/trading/positions"),
-        ]);
-        setPortfolio(pRes.data);
-        setQuotes(qRes.data);
-        setPositions(posRes.data.slice(0, 5));
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    Promise.all([api.get("/portfolio/summary"), api.get("/market/quotes"), api.get("/trading/positions")])
+      .then(([p, q, pos]) => {
+        setPortfolio(p.data); setQuotes(q.data); setPositions(pos.data.slice(0, 5));
+      }).finally(() => setLoading(false));
   }, []);
 
   const pct = portfolio?.total_return_pct ?? 0;
+  const fmt = (n) => `$${(n ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-outfit text-3xl font-semibold text-[#1A2421] mb-1">
-            Welcome back, {user?.name?.split(" ")[0] || "Trader"}
-          </h1>
-          <p className="text-[#4A5D54] text-sm font-manrope">
-            Your simulated portfolio at a glance.
-          </p>
+        {/* Live mode banner */}
+        {!isDemo && (
+          <div className="mb-6 flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3">
+            <div className="flex items-center gap-2.5">
+              <Activity size={16} className="text-emerald-600" strokeWidth={2} />
+              <p className="text-sm font-semibold text-emerald-700">Live Mode Active</p>
+              <span className="text-sm text-emerald-600">— Real trading is via broker partners.</span>
+            </div>
+            <button onClick={() => navigate("/brokers")}
+              className="text-xs font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition-colors flex items-center gap-1">
+              View Brokers <ArrowRight size={12} />
+            </button>
+          </div>
+        )}
+
+        {/* Page header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="font-outfit text-3xl font-semibold text-[#0A2540]">
+              Good to see you, {user?.name?.split(" ")[0] || "Trader"}
+            </h1>
+            <p className="text-slate-400 text-sm mt-1 font-inter">
+              {isDemo ? "Virtual portfolio overview" : "Live mode — practice data shown below"}
+            </p>
+          </div>
+          <button onClick={() => navigate(isDemo ? "/trading" : "/brokers")} data-testid="header-trade-btn"
+            className="hidden md:flex items-center gap-2 bg-[#0A2540] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#051A2E] transition-colors shadow-button">
+            {isDemo ? "Open Trade" : "Live Brokers"} <ArrowRight size={15} strokeWidth={2} />
+          </button>
         </div>
 
-        {/* Metric cards */}
+        {/* Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <MetricCard
-            label="Portfolio Value"
-            value={`$${(portfolio?.total_portfolio_value ?? 10000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-            sub="Virtual currency"
-            icon={Wallet}
-            delay={0}
-          />
-          <MetricCard
-            label="Cash Balance"
-            value={`$${(portfolio?.cash_balance ?? 10000).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
-            sub="Available to trade"
-            icon={Wallet}
-            delay={0.1}
-          />
+          <MetricCard label="Portfolio Value" value={fmt(portfolio?.total_portfolio_value ?? 10000)} sub="Total virtual" i={0} />
+          <MetricCard label="Cash Balance" value={fmt(portfolio?.cash_balance ?? 10000)} sub="Available" i={1} />
           <MetricCard
             label="Total Return"
-            value={formatCurrency(portfolio?.total_return ?? 0)}
-            sub="vs. $10,000 start"
-            positive={pct > 0 ? true : pct < 0 ? false : null}
-            icon={pct >= 0 ? TrendUp : TrendDown}
-            delay={0.2}
+            value={`${pct >= 0 ? "+" : ""}${fmt(portfolio?.total_return ?? 0)}`}
+            sub="vs. $10K start"
+            colorClass={pct > 0 ? "text-emerald-600" : pct < 0 ? "text-red-500" : "text-[#0A2540]"}
+            i={2}
           />
           <MetricCard
             label="Return %"
             value={`${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`}
             sub={`${portfolio?.total_trades ?? 0} closed trades`}
-            positive={pct > 0 ? true : pct < 0 ? false : null}
-            icon={ChartLineUp}
-            delay={0.3}
+            colorClass={pct > 0 ? "text-emerald-600" : pct < 0 ? "text-red-500" : "text-[#0A2540]"}
+            i={3}
           />
         </div>
 
-        {/* Market watchlist + quick trade */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <div className="bg-white border border-[#D1CDC3] rounded-2xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#EAE7E0] flex items-center justify-between">
-                <h2 className="font-outfit text-base font-semibold text-[#1A2421]">Volatility Watchlist</h2>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-[#2C4C3B] rounded-full live-dot" />
-                  <span className="text-xs text-[#7A8C83]">Live data</span>
-                </div>
+        {/* Market + Quick */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-card">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="font-outfit text-base font-semibold text-[#0A2540]">Volatility Watchlist</h2>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot" />
+                <span className="text-xs text-slate-400">Live</span>
               </div>
-              {loading ? (
-                <div className="p-6 space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-12 shimmer rounded-lg" />
-                  ))}
-                </div>
-              ) : (
-                <table className="w-full" data-testid="watchlist-table">
-                  <thead>
-                    <tr className="border-b border-[#EAE7E0]">
-                      <th className="text-left px-6 py-3 text-xs font-medium text-[#7A8C83] uppercase tracking-wider">Index</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-[#7A8C83] uppercase tracking-wider">Price</th>
-                      <th className="text-right px-6 py-3 text-xs font-medium text-[#7A8C83] uppercase tracking-wider">Change</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quotes.map((q) => (
-                      <tr
-                        key={q.symbol}
-                        onClick={() => navigate("/trading", { state: { symbol: q.symbol } })}
-                        className="border-b border-[#F7F5F0] hover:bg-[#F7F5F0] cursor-pointer transition-colors"
-                        data-testid={`watchlist-row-${q.display}`}
-                      >
-                        <td className="px-6 py-4">
-                          <div>
-                            <span className="font-mono text-sm font-semibold text-[#1A2421]">{q.display}</span>
-                            <p className="text-xs text-[#7A8C83] mt-0.5 hidden sm:block">{q.name}</p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <span className="font-mono text-sm font-medium text-[#1A2421]">
-                            {q.price > 0 ? q.price.toFixed(2) : "—"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className={`font-mono text-sm font-medium ${
-                            q.change_pct >= 0 ? "text-[#2C4C3B]" : "text-[#C05746]"
-                          }`}>
-                            {q.change_pct >= 0 ? "+" : ""}{q.change_pct.toFixed(2)}%
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
             </div>
+            {loading ? (
+              <div className="p-4 space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-11 shimmer rounded-lg" />)}</div>
+            ) : (
+              <table className="w-full" data-testid="watchlist-table">
+                <thead>
+                  <tr className="border-b border-slate-50">
+                    <th className="text-left px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Index</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Price</th>
+                    <th className="text-right px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotes.map((q) => (
+                    <tr key={q.symbol} onClick={() => navigate(isDemo ? "/trading" : "/brokers", { state: { symbol: q.symbol } })}
+                      className="border-b border-slate-50 hover:bg-[#F8F9FA] cursor-pointer transition-colors"
+                      data-testid={`watchlist-row-${q.display}`}>
+                      <td className="px-6 py-4">
+                        <div>
+                          <span className="font-outfit text-sm font-semibold text-[#0A2540]">{q.display}</span>
+                          <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">{q.name}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-medium text-[#0A2540]">
+                        {q.price > 0 ? q.price.toFixed(2) : "—"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className={`font-mono text-sm font-semibold ${q.change_pct >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                          {q.change_pct >= 0 ? "+" : ""}{q.change_pct.toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
-          {/* Quick trade card */}
-          <div className="bg-[#1A2421] rounded-2xl p-6 flex flex-col">
-            <h2 className="font-outfit text-base font-semibold text-white mb-2">Ready to trade?</h2>
-            <p className="text-sm text-[#7A8C83] mb-6 leading-relaxed">
-              Go long or short on CBOE volatility indices with your virtual balance.
+          {/* Right panel */}
+          <div className="bg-[#0A2540] rounded-xl p-6 flex flex-col shadow-card">
+            <h2 className="font-outfit text-base font-semibold text-white mb-1">
+              {isDemo ? "Practice Account" : "Live Trading"}
+            </h2>
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+              {isDemo
+                ? "Trade volatility indices with your virtual balance. No real money."
+                : "Access real broker platforms. SimuTrade doesn't execute real trades."}
             </p>
-            <div className="space-y-3 mb-8 flex-1">
-              {[
-                ["$" + (portfolio?.cash_balance ?? 10000).toFixed(2), "Available Cash"],
-                [(portfolio?.open_positions ?? 0) + " open", "Positions"],
-                [(portfolio?.total_trades ?? 0) + " closed", "Trades"],
-              ].map(([val, lab]) => (
-                <div key={lab} className="flex justify-between items-center py-2 border-b border-white/10">
-                  <span className="text-xs text-[#7A8C83]">{lab}</span>
-                  <span className="font-mono text-sm text-white font-medium">{val}</span>
-                </div>
-              ))}
+            <div className="space-y-3 flex-1">
+              {isDemo
+                ? [
+                    [fmt(portfolio?.cash_balance ?? 10000), "Available Cash"],
+                    [(portfolio?.open_positions ?? 0) + " open", "Positions"],
+                    [(portfolio?.total_trades ?? 0) + " done", "Trades"],
+                  ]
+                : [
+                    ["6 Partners", "Broker Options"],
+                    ["Commission-free", "Some Platforms"],
+                    ["Secure", "OAuth Login"],
+                  ].map(([v, l]) => (
+                    <div key={l} className="flex justify-between py-2 border-b border-white/10">
+                      <span className="text-xs text-slate-400">{l}</span>
+                      <span className="font-mono text-sm text-white font-medium">{v}</span>
+                    </div>
+                  ))}
             </div>
-            <button
-              onClick={() => navigate("/trading")}
-              data-testid="quick-trade-btn"
-              className="flex items-center justify-center gap-2 bg-[#C05746] text-white py-3 rounded-xl text-sm font-medium hover:bg-[#A64B3C] transition-colors"
-            >
-              Open Trading Terminal <ArrowRight size={16} />
+            <button onClick={() => navigate(isDemo ? "/trading" : "/brokers")} data-testid="quick-trade-btn"
+              className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-3 rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors mt-6">
+              {isDemo ? "Open Position" : "View Brokers"} <ArrowRight size={15} strokeWidth={2} />
             </button>
           </div>
         </div>
 
-        {/* Open positions */}
-        {positions.length > 0 && (
-          <div className="bg-white border border-[#D1CDC3] rounded-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#EAE7E0] flex items-center justify-between">
-              <h2 className="font-outfit text-base font-semibold text-[#1A2421]">Open Positions</h2>
-              <button
-                onClick={() => navigate("/portfolio")}
-                className="text-xs text-[#4A5D54] hover:text-[#1A2421] flex items-center gap-1 transition-colors"
-              >
+        {/* Positions */}
+        {positions.length > 0 ? (
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-card">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="font-outfit text-base font-semibold text-[#0A2540]">Open Positions</h2>
+              <button onClick={() => navigate("/portfolio")}
+                className="text-xs text-slate-400 hover:text-slate-700 flex items-center gap-1">
                 View all <ArrowRight size={12} />
               </button>
             </div>
-            <div className="divide-y divide-[#F7F5F0]">
+            <div className="divide-y divide-slate-50">
               {positions.map((pos) => (
-                <div key={pos.position_id} className="px-6 py-4 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm font-semibold text-[#1A2421]">
-                        {pos.symbol?.replace("^", "")}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                        pos.direction === "long"
-                          ? "bg-[#2C4C3B]/10 text-[#2C4C3B]"
-                          : "bg-[#C05746]/10 text-[#C05746]"
-                      }`}>
-                        {pos.direction?.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#7A8C83] mt-0.5">{pos.contracts} contracts @ {pos.entry_price?.toFixed(2)}</p>
+                <div key={pos.position_id} className="px-6 py-4 flex items-center justify-between hover:bg-[#F8F9FA] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="font-outfit font-semibold text-sm text-[#0A2540]">{pos.symbol?.replace("^", "")}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                      pos.direction === "long" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                    }`}>{pos.direction?.toUpperCase()}</span>
+                    <span className="text-xs text-slate-400">{pos.contracts} × {pos.entry_price?.toFixed(2)}</span>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-mono text-sm font-semibold ${
-                      (pos.unrealized_pnl ?? 0) >= 0 ? "text-[#2C4C3B]" : "text-[#C05746]"
-                    }`}>
-                      {(pos.unrealized_pnl ?? 0) >= 0 ? "+" : ""}${Math.abs(pos.unrealized_pnl ?? 0).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-[#7A8C83]">{pos.pnl_pct?.toFixed(2)}%</p>
-                  </div>
+                  <span className={`font-mono text-sm font-semibold ${(pos.unrealized_pnl ?? 0) >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                    {(pos.unrealized_pnl ?? 0) >= 0 ? "+" : ""}${Math.abs(pos.unrealized_pnl ?? 0).toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
-        {positions.length === 0 && !loading && (
-          <div className="bg-white border border-dashed border-[#D1CDC3] rounded-2xl p-12 text-center">
-            <Circle size={40} className="text-[#D1CDC3] mx-auto mb-4" />
-            <p className="font-outfit font-semibold text-[#4A5D54] mb-2">No open positions</p>
-            <p className="text-sm text-[#7A8C83] mb-6">Head to the trading terminal to open your first position.</p>
-            <button
-              onClick={() => navigate("/trading")}
-              data-testid="no-positions-trade-btn"
-              className="bg-[#2C4C3B] text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-[#1E362A] transition-colors"
-            >
-              Start Trading
+        ) : !loading && (
+          <div className="border border-dashed border-slate-200 rounded-xl p-12 text-center bg-[#F8F9FA]">
+            <Wallet size={32} strokeWidth={1} className="text-slate-300 mx-auto mb-3" />
+            <p className="font-outfit font-semibold text-slate-500 mb-1">No open positions</p>
+            <p className="text-sm text-slate-400 mb-5">Open your first position in the trading terminal.</p>
+            <button onClick={() => navigate(isDemo ? "/trading" : "/brokers")} data-testid="no-positions-trade-btn"
+              className="bg-[#0A2540] text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#051A2E] transition-colors">
+              {isDemo ? "Start Trading" : "View Brokers"}
             </button>
           </div>
         )}
