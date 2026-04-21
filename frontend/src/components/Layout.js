@@ -134,6 +134,15 @@ export default function Layout({ children }) {
 
       {/* Main */}
       <main className="md:ml-60 flex-1 min-h-screen flex flex-col">
+        {/* Global simulation disclaimer (Demo mode only) */}
+        {isDemo && (
+          <div
+            data-testid="sim-disclaimer-banner"
+            className="bg-amber-50 border-b border-amber-200 text-amber-800 text-[11px] md:text-xs font-medium text-center py-1.5 px-4"
+          >
+            Simulation Platform Only — All trades use virtual currency. No real financial transactions.
+          </div>
+        )}
         {/* Header */}
         <header className="h-14 sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-3">

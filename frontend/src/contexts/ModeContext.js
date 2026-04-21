@@ -3,9 +3,14 @@ import React, { createContext, useContext, useState } from "react";
 const ModeContext = createContext(null);
 
 export function ModeProvider({ children }) {
-  const [mode, setModeState] = useState(
-    localStorage.getItem("simutrade_mode") || "demo"
-  );
+  const [mode, setModeState] = useState(() => {
+    const stored = localStorage.getItem("simutrade_mode");
+    if (!stored) {
+      localStorage.setItem("simutrade_mode", "demo");
+      return "demo";
+    }
+    return stored;
+  });
 
   const setMode = (newMode) => {
     setModeState(newMode);

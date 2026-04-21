@@ -51,6 +51,7 @@ function AppRouter() {
       <Route path="/learn" element={<LearnPage />} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/brokers" element={<ProtectedRoute><RealModePage /></ProtectedRoute>} />
+      <Route path="/legal" element={<LegalPage page="terms" />} />
       <Route path="/terms" element={<LegalPage page="terms" />} />
       <Route path="/privacy" element={<LegalPage page="privacy" />} />
       <Route path="*" element={<Navigate to="/" replace />} />

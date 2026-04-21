@@ -151,7 +151,7 @@ export default function DashboardPage() {
                 : "Access real broker platforms. SimuTrade doesn't execute real trades."}
             </p>
             <div className="space-y-3 flex-1">
-              {isDemo
+              {(isDemo
                 ? [
                     [fmt(portfolio?.cash_balance ?? 10000), "Available Cash"],
                     [(portfolio?.open_positions ?? 0) + " open", "Positions"],
@@ -161,12 +161,13 @@ export default function DashboardPage() {
                     ["6 Partners", "Broker Options"],
                     ["Commission-free", "Some Platforms"],
                     ["Secure", "OAuth Login"],
-                  ].map(([v, l]) => (
-                    <div key={l} className="flex justify-between py-2 border-b border-white/10">
-                      <span className="text-xs text-slate-400">{l}</span>
-                      <span className="font-mono text-sm text-white font-medium">{v}</span>
-                    </div>
-                  ))}
+                  ]
+              ).map(([v, l]) => (
+                <div key={l} className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-xs text-slate-300">{l}</span>
+                  <span className="font-mono text-sm text-white font-medium">{v}</span>
+                </div>
+              ))}
             </div>
             <button onClick={() => navigate(isDemo ? "/trading" : "/brokers")} data-testid="quick-trade-btn"
               className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-3 rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors mt-6">
