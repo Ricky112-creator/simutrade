@@ -14,6 +14,27 @@ from models.schemas import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+@router.post("/guest")
+async def guest():
+    """Create a throwaway guest user and return a JWT for instant demo trading."""
+    user_id = f"guest_{uuid.uuid4().hex[:12]}"
+    email = f"{user_id}@simutrade.local"
+    doc = {
+        "user_id": user_id,
+        "email": email,
+        "name": "Guest",
+        "role": "guest",
+        "auth_type": "guest",
+        "onboarding_complete": True,
+        "balance": STARTING_BALANCE,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(doc)
+    token = create_access_token(user_id, email)
+    doc.pop("_id", None)
+    return {"user": doc, "token": token}
+
+
 @router.post("/register")
 async def register(req: RegisterRequest):
     email = req.email.lower().strip()

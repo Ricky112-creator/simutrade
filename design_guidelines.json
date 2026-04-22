@@ -1,126 +1,167 @@
 {
-  "theme": "Light",
-  "archetype": "Archetype 4: Swiss & High-Contrast (Fintech Variant)",
+  "theme": "light",
+  "archetype": "1_and_4_hybrid",
+  "archetype_description": "A premium hybrid of 'Organic & Earthy' and 'Swiss & High-Contrast'. It uses warm bone/off-white backgrounds, deep navy primary text, and soft coral accents to create a trustworthy, high-end fintech interface reminiscent of Mercury or Stripe, but distinctively unique. Avoids all 'crypto-bro' neon aesthetics.",
   "colors": {
-    "background": {
-      "default": "#FFFFFF",
-      "muted": "#F8F9FA",
-      "sidebar": "#F4F5F7"
-    },
-    "primary": {
-      "DEFAULT": "#0A2540",
-      "hover": "#051A2E",
-      "foreground": "#FFFFFF"
-    },
-    "accent": {
-      "success": "#10B981",
-      "successHover": "#059669",
-      "successForeground": "#FFFFFF",
-      "danger": "#EF4444",
-      "dangerHover": "#DC2626"
-    },
-    "text": {
-      "primary": "#0F172A",
-      "secondary": "#64748B",
-      "tertiary": "#94A3B8"
-    },
-    "border": {
-      "default": "#E2E8F0",
-      "light": "#F1F5F9"
-    }
+    "background": "#F5F5F0",
+    "surface": "#FFFFFF",
+    "surface_hover": "#F0F0EB",
+    "primary_text": "#1B263B",
+    "secondary_text": "#415A77",
+    "tertiary_text": "#778DA9",
+    "brand_accent": "#E07A5F",
+    "brand_accent_hover": "#D36649",
+    "brand_accent_light": "#F9EAE6",
+    "success": "#426B1F",
+    "success_light": "#EAF0E4",
+    "danger": "#9E2A2B",
+    "danger_light": "#F5E6E6",
+    "warning": "#E3B505",
+    "warning_light": "#FCF6DF",
+    "border": "#E5E5DF",
+    "border_focus": "#1B263B"
   },
   "typography": {
-    "headings": {
-      "fontFamily": "Outfit, sans-serif",
-      "weights": ["500", "600", "700"],
-      "tracking": "tracking-tight"
-    },
-    "body": {
-      "fontFamily": "Inter, sans-serif",
-      "weights": ["400", "500"]
-    },
-    "scales": {
-      "h1": "text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tighter text-slate-900",
-      "h2": "text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-slate-900",
-      "h3": "text-xl sm:text-2xl font-medium tracking-tight text-slate-800",
-      "h4": "text-lg sm:text-xl font-medium text-slate-800",
-      "body": "text-base text-slate-600 leading-relaxed",
-      "small": "text-sm text-slate-500",
-      "overline": "text-xs font-semibold tracking-[0.2em] uppercase text-slate-500"
+    "heading_font": "Outfit, sans-serif",
+    "body_font": "Manrope, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "hierarchy": {
+      "h1": "text-4xl md:text-5xl font-medium tracking-tight text-primary_text",
+      "h2": "text-2xl md:text-3xl font-medium tracking-tight text-primary_text",
+      "h3": "text-xl font-medium tracking-tight text-primary_text",
+      "h4": "text-lg font-medium text-primary_text",
+      "body": "text-base text-secondary_text leading-relaxed",
+      "small": "text-sm text-tertiary_text",
+      "overline": "text-xs font-semibold uppercase tracking-widest text-tertiary_text",
+      "metrics": "text-3xl font-mono font-medium text-primary_text tracking-tight",
+      "ticker": "text-sm font-mono font-medium text-primary_text"
     }
   },
-  "spacing": {
-    "section": "py-20 lg:py-32",
-    "container": "px-6 lg:px-12 max-w-7xl mx-auto",
-    "card": "p-6 sm:p-8"
-  },
-  "layout": {
-    "dashboard": "Bento Grid Protocol (Mode B): grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
-    "marketing": "Asymmetric Swiss Grid: grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12"
+  "spacing_and_layout": {
+    "container_padding": "px-4 sm:px-6 lg:px-8",
+    "section_gap": "gap-12 md:gap-24",
+    "card_padding": "p-6 md:p-8",
+    "grid_system": {
+      "dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+      "terminal": "grid-cols-1 lg:grid-cols-12 gap-6"
+    },
+    "radii": {
+      "card": "rounded-2xl",
+      "button": "rounded-xl",
+      "input": "rounded-xl",
+      "badge": "rounded-full"
+    },
+    "shadows": {
+      "card": "shadow-[0_8px_30px_rgb(27,38,59,0.04)]",
+      "hover": "shadow-[0_20px_40px_rgb(27,38,59,0.08)]",
+      "dropdown": "shadow-[0_10px_40px_rgb(27,38,59,0.12)]"
+    }
   },
   "components": {
-    "cards": "bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200",
     "buttons": {
-      "primary": "bg-[#0A2540] hover:bg-[#051A2E] text-white rounded-lg px-6 py-2.5 font-medium transition-colors",
-      "success": "bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg px-6 py-2.5 font-medium transition-colors",
-      "outline": "border border-slate-200 bg-transparent hover:bg-slate-50 text-slate-900 rounded-lg px-6 py-2.5 font-medium transition-colors"
+      "primary": "bg-brand_accent text-white hover:bg-brand_accent_hover transition-colors duration-200 rounded-xl px-6 py-3 font-medium",
+      "secondary": "bg-primary_text text-white hover:bg-secondary_text transition-colors duration-200 rounded-xl px-6 py-3 font-medium",
+      "outline": "border-2 border-border text-primary_text hover:border-primary_text transition-colors duration-200 rounded-xl px-6 py-3 font-medium",
+      "ghost": "text-secondary_text hover:text-primary_text hover:bg-surface_hover transition-colors duration-200 rounded-xl px-4 py-2 font-medium"
     },
-    "sidebar": "w-64 bg-[#F8F9FA] border-r border-slate-200 h-screen fixed left-0 top-0",
-    "header": "h-16 border-b border-slate-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50",
-    "inputs": "bg-white border border-slate-200 rounded-lg px-4 py-2 text-slate-900 focus:ring-2 focus:ring-[#0A2540]/20 focus:border-[#0A2540] transition-all",
-    "badge": {
-      "demo": "bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 rounded-full text-xs font-medium",
-      "real": "bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-medium"
+    "cards": {
+      "base": "bg-surface rounded-2xl border border-border/50 shadow-card transition-shadow duration-300 hover:shadow-hover overflow-hidden",
+      "interactive": "cursor-pointer active:scale-[0.99] transition-all duration-200"
+    },
+    "inputs": {
+      "base": "w-full bg-surface border border-border rounded-xl px-4 py-3 text-primary_text focus:outline-none focus:ring-2 focus:ring-primary_text focus:border-transparent transition-all placeholder:text-tertiary_text"
+    },
+    "tables": {
+      "wrapper": "w-full overflow-x-auto",
+      "header": "border-b border-border bg-background/50",
+      "header_cell": "px-4 py-3 text-left text-xs font-semibold text-secondary_text uppercase tracking-wider",
+      "row": "border-b border-border/50 hover:bg-surface_hover/50 transition-colors",
+      "cell": "px-4 py-4 text-sm text-primary_text font-mono"
+    },
+    "banners": {
+      "demo_disclaimer": "bg-warning_light text-warning border-b border-warning/20 px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2",
+      "real_disclaimer": "bg-brand_accent_light text-brand_accent border-b border-brand_accent/20 px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2"
+    },
+    "simubot": {
+      "panel": "fixed bottom-6 right-6 w-[380px] bg-surface rounded-2xl shadow-dropdown border border-border overflow-hidden z-50 flex flex-col",
+      "header": "bg-primary_text text-white p-4 flex justify-between items-center",
+      "message_user": "bg-surface_hover text-primary_text rounded-2xl rounded-tr-sm p-3 max-w-[85%] self-end",
+      "message_bot": "bg-brand_accent_light text-primary_text rounded-2xl rounded-tl-sm p-3 max-w-[85%] self-start border border-brand_accent/10"
     }
   },
-  "interactions_and_motion": {
-    "hover": "All interactive elements must change state on hover. Buttons darken, cards lift slightly (-translate-y-1).",
-    "transitions": "Use 'transition-all duration-200 ease-out' globally for standard UI changes.",
-    "page_load": "Staggered fade-up for dashboard widgets and list items."
+  "pages": {
+    "landing": {
+      "layout": "Clean, generous vertical rhythm. Large typography. Centralized hero section.",
+      "hero": "H1 text-5xl md:text-7xl with tight tracking. Prominent 'Start Demo Trading' primary button, alongside a secondary 'Connect Deriv' button.",
+      "features": "Bento grid layout for 'How it Works' using the Tetris grid pattern (asymmetry creates interest)."
+    },
+    "dashboard": {
+      "layout": "Control Room Grid (grid-cols-4). Strict alignment, pure functionality.",
+      "top_bar": "Sticky nav. Shows total balance (mono font), Practice/Live toggle switch, Profile icon.",
+      "content": "Top row: 3 metric cards (Balance, P&L, Win Rate). Center: Volatility Watchlist Table (col-span-3). Right: Practice Account CTA card (col-span-1). Bottom: Recent positions table."
+    },
+    "trading_terminal": {
+      "layout": "Full viewport height (h-screen), no page scroll. 3-column layout.",
+      "left_sidebar": "Sticky index selector (VIX, VXN, etc.). Clean list with tiny sparklines.",
+      "center_chart": "Recharts Area/Line chart taking up maximum space. Clean tooltips, no heavy gridlines.",
+      "right_panel": "Order entry. Long/Short toggle (pill shaped). Quick amount chips. Large execution button (green for Call/Long, red for Put/Short).",
+      "post_trade": "SimuBot rationale card slides in over the chart or right panel temporarily after execution."
+    },
+    "real_mode": {
+      "layout": "Similar to Demo Terminal but with a persistent connection status bar.",
+      "connection_modal": "Clean, centered modal for Deriv API token entry. Secure masking for token input.",
+      "portfolio": "Deriv specific metrics syncing via WebSocket."
+    },
+    "learn": {
+      "layout": "Magazine/Editorial style grid. Large imagery, serif or elegant sans-serif article titles.",
+      "grid": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8",
+      "glossary": "2-column alphabetical list, subtle border separators."
+    }
   },
-  "accessibility": {
-    "contrast": "Ensure all text against backgrounds meets minimum 4.5:1 ratio (APCA guidelines).",
-    "testing": "MUST include 'data-testid' on all interactive and key informational elements (buttons, inputs, toggles, balances, charts)."
+  "animation_and_motion": {
+    "hover": "Use subtle transforms (translate-y-[-2px]) combined with shadow expansions.",
+    "page_transitions": "Fade and slight slide up (framer-motion).",
+    "data_updates": "Flash background color subtly on tick updates (e.g., price change).",
+    "simubot": "Spring animation for panel opening (stiffness: 260, damping: 20)."
   },
-  "media_assets": {
-    "hero_background": {
-      "url": "https://static.prod-images.emergentagent.com/jobs/665453e7-75d6-45f5-8709-92527a0aed60/images/56ce5b489ce823c85513cc281e1843c75566586a51f60abfa5266ff703637928.png",
-      "description": "Abstract clean fintech 3D shapes in navy and mint, perfect for landing page hero background (use with opacity/overlay to maintain text contrast)."
-    },
-    "trading_illustration": {
-      "url": "https://static.prod-images.emergentagent.com/jobs/665453e7-75d6-45f5-8709-92527a0aed60/images/f698cd7e90451c627ecc9ab594f2bbd641b6300418a354a584952b726a7f18b2.png",
-      "description": "Minimalist 3D isometric financial trading chart trending upward. Use in onboarding or Learn center."
-    },
-    "onboarding_texture": {
-      "url": "https://static.prod-images.emergentagent.com/jobs/665453e7-75d6-45f5-8709-92527a0aed60/images/8416bbb983af3d725369b77c67c3ea95cf1e6b2f4308940c69041dbfbb456aec.png",
-      "description": "Soft gradient background for auth pages or onboarding wizard."
-    },
-    "testimonial_portraits": [
+  "assets": {
+    "icons_library": "lucide-react",
+    "image_urls": [
       {
-        "url": "https://images.pexels.com/photos/36934779/pexels-photo-36934779.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "description": "Professional user portrait"
+        "category": "hero_background",
+        "url": "https://images.pexels.com/photos/7130464/pexels-photo-7130464.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Abstract light green gradient texture for ambient background blending"
       },
       {
-        "url": "https://images.unsplash.com/photo-1762522926157-bcc04bf0b10a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzN8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHBvcnRyYWl0JTIwY2xlYW58ZW58MHx8fHwxNzc2NzgxMzM1fDA&ixlib=rb-4.1.0&q=85",
-        "description": "Casual professional portrait"
-      }
-    ],
-    "broker_logos": [
-      {
-        "url": "https://images.pexels.com/photos/9973170/pexels-photo-9973170.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "description": "Partner Broker 1 Logo"
+        "category": "learn_article_thumbnail_1",
+        "url": "https://images.pexels.com/photos/669623/pexels-photo-669623.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Minimalist business chart on desk for trading psychology articles"
       },
       {
-        "url": "https://images.unsplash.com/photo-1764344815160-0e2afc6939a0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwyfHxjb21wYW55JTIwbG9nbyUyMHdoaXRlJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzY3MDgzOTV8MA&ixlib=rb-4.1.0&q=85",
-        "description": "Partner Broker 2 Logo"
+        "category": "learn_article_thumbnail_2",
+        "url": "https://images.pexels.com/photos/669622/pexels-photo-669622.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Top view of charts for technical analysis articles"
+      },
+      {
+        "category": "placeholder_logo_or_icon",
+        "url": "https://images.unsplash.com/photo-1618004652321-13a63e576b80?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHxnZW9tZXRyaWMlMjBsb2dvJTIwc2lnbiUyMG1pbmltYWx8ZW58MHx8fHwxNzc2ODM2MTE1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "White paper star geometric sign to be used for Simubot avatar fallback or abstract logo"
       }
     ]
   },
-  "specific_instructions_to_main_agent": {
-    "demo_real_toggle": "Create a highly visible, pill-shaped toggle switch in the main header or top of the sidebar. In Demo mode, show a subtle gray/blue 'Practice' badge. In Real mode, switch accent to soft green 'Live' badge and update dashboard CTAs to point to broker redirect links instead of internal simulator actions.",
-    "charts": "Use Recharts or Shadcn charts. Ensure lines and areas use the primary navy or accent green colors. No grid lines on the X/Y axes to maintain the clean Stripe-like look.",
-    "tech_stack": "MUST use standard .js extensions (NO TSX). Use standard HTML elements formatted with Tailwind classes for layout structures. For complex interactive elements like the mode toggle or modal popups, use customized Shadcn UI components.",
-    "icons": "Use lucide-react (default) with thin stroke-width (1.5) to keep the minimal aesthetic.",
-    "testing": "All interactive elements and key text MUST have a 'data-testid' attribute (e.g., data-testid='mode-toggle-switch')."
-  }
+  "testing": {
+    "data_testid_requirement": "All interactive and key informational elements MUST include a data-testid attribute formatted as kebab-case role-based strings (e.g., 'submit-trade-button', 'deriv-token-input')."
+  },
+  "instructions_to_main_agent": [
+    "Install required fonts: Outfit (headings), Manrope (body), JetBrains Mono (numbers).",
+    "Configure Tailwind CSS to use the provided color variables in this JSON.",
+    "Do NOT use 'crypto-bro' neon colors. Stick strictly to the Cool Bone + Navy + Soft Coral palette provided.",
+    "Ensure the Demo Mode 'Simulation Platform Only' banner is rendered globally.",
+    "Implement the 'SimuBot' using the panel styling provided in this JSON.",
+    "Use Lucide React for all icons (minimal, clean).",
+    "Apply `rounded-2xl` to outer cards and `rounded-xl` to buttons and inputs.",
+    "Replace Shadcn default borders with the softer `#E5E5DF` border defined here.",
+    "Ensure all numbers, especially in the trading terminal and dashboard, use the mono font for tabular alignment.",
+    "Enforce `data-testid` on all buttons, links, inputs, and major state-displaying components."
+  ]
 }
