@@ -7,7 +7,7 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-const API_TOKEN = "PUT_YOUR_TOKEN_HERE";
+const API_TOKEN = process.env.API_TOKEN;
 
 const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
 
