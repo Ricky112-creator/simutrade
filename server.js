@@ -8,7 +8,7 @@ app.use(cors());
 const PORT = process.env.PORT || 3000;
 
 const API_TOKEN = process.env.API_TOKEN;
-
+console.log("API TOKEN:", API_TOKEN);
 const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
 
 let balanceData = null;
