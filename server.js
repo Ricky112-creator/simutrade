@@ -38,7 +38,20 @@ app.get('/', (req, res) => {
 });
 
 app.get('/balance', (req, res) => {
-    res.json(balanceData);
+    app.get('/balance', (req, res) => {
+    if (!balanceData) {
+        return res.json({
+            status: "waiting",
+            message: "Connecting to Deriv..."
+        });
+    }
+
+    res.json({
+        status: "success",
+        balance: balanceData.balance,
+        currency: balanceData.currency
+    });
+});
 });
 
 app.listen(PORT, () => {
