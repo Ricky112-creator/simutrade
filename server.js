@@ -21,12 +21,19 @@ import { buyTrade, sellTrade } from "./trading.js";
 import Trade from "./models/Trade.js";
 
 /**
- * 💰 WALLET SYSTEM IMPORTS (STEP 4)
+ * 💰 WALLET SYSTEM
  */
 import {
   getOrCreateWallet,
   addBalance
 } from "./core/walletManager.js";
+
+/**
+ * 🔐 AUTH SYSTEM
+ */
+import User from "./models/User.js";
+import { generateToken, hashPassword, comparePassword } from "./auth/auth.js";
+import { authMiddleware } from "./middleware/authMiddleware.js";
 
 const app = express();
 app.use(cors());
@@ -46,7 +53,7 @@ process.on("unhandledRejection", (err) => {
 });
 
 /**
- * 🧠 DATABASE CONNECT (SAFE)
+ * 🧠 DATABASE CONNECT
  */
 (async () => {
   try {
@@ -61,12 +68,10 @@ process.on("unhandledRejection", (err) => {
 /**
  * 🚦 RATE LIMIT
  */
-app.use(
-  rateLimit({
-    windowMs: 60 * 1000,
-    max: 30
-  })
-);
+app.use(rateLimit({
+  windowMs: 60 * 1000,
+  max: 30
+}));
 
 /**
  * 🧠 HELPERS
@@ -74,97 +79,119 @@ app.use(
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
-function validateConnect({ userId, token }) {
-  if (!userId) throw new Error("userId required");
-  if (!token) throw new Error("token required");
-}
-
-function validateTrade({ userId, amount, symbol, duration }) {
-  if (!userId) throw new Error("userId required");
-  if (!amount || amount <= 0) throw new Error("Invalid amount");
-  if (amount > 1000) throw new Error("Max trade is 1000");
-  if (!symbol) throw new Error("Symbol required");
-  if (!duration || duration < 1 || duration > 60)
-    throw new Error("Invalid duration");
+/**
+ * 🔐 ADMIN MIDDLEWARE
+ */
+function adminOnly(req, res, next) {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin only" });
+  }
+  next();
 }
 
 /**
- * 🧾 LOGGING
+ * =========================
+ * AUTH ROUTES
+ * =========================
  */
-function log(type, message, data = {}) {
-  console.log(
-    JSON.stringify({
-      time: new Date().toISOString(),
-      type,
-      message,
-      ...data
-    })
-  );
-}
 
-/**
- * 🔐 ACTIVE TRADE LOCK
- */
-const activeTrades = new Set();
+// REGISTER
+app.post("/register", asyncHandler(async (req, res) => {
+  const { userId, password } = req.body;
 
-/**
- * HEALTH CHECK
- */
-app.get("/", (req, res) => {
-  res.json({ status: "SimuTrade backend running ✅" });
-});
+  if (!userId || !password) throw new Error("Missing fields");
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    uptime: process.uptime()
+  const exists = await User.findOne({ userId });
+  if (exists) throw new Error("User exists");
+
+  const hashed = await hashPassword(password);
+
+  await User.create({
+    userId,
+    password: hashed,
+    role: "user"
   });
-});
+
+  res.json({ message: "User created" });
+}));
+
+// LOGIN
+app.post("/login", asyncHandler(async (req, res) => {
+  const { userId, password } = req.body;
+
+  const user = await User.findOne({ userId });
+  if (!user) throw new Error("User not found");
+
+  const ok = await comparePassword(password, user.password);
+  if (!ok) throw new Error("Invalid credentials");
+
+  const token = generateToken(user);
+
+  res.json({
+    token,
+    userId: user.userId,
+    role: user.role
+  });
+}));
 
 /**
- * 💰 STEP 4: WALLET ENDPOINTS
+ * =========================
+ * ADMIN ROUTES 🔥
+ * =========================
  */
 
-// GET WALLET BALANCE
-app.get(
-  "/wallet/:userId",
+// VIEW ALL USERS
+app.get("/admin/users",
+  authMiddleware,
+  adminOnly,
   asyncHandler(async (req, res) => {
-    const wallet = await getOrCreateWallet(req.params.userId);
-
-    res.json({
-      userId: req.params.userId,
-      balance: wallet.balance
-    });
+    const users = await User.find().select("-password");
+    res.json(users);
   })
 );
 
-// DEPOSIT (SIMULATION / ADMIN USE)
-app.post(
-  "/wallet/deposit",
+// CREDIT USER WALLET
+app.post("/admin/credit",
+  authMiddleware,
+  adminOnly,
   asyncHandler(async (req, res) => {
     const { userId, amount } = req.body;
 
-    if (!userId) throw new Error("userId required");
-    if (!amount || amount <= 0) throw new Error("invalid amount");
+    if (!userId || !amount) throw new Error("Invalid request");
 
-    const wallet = await addBalance(userId, amount, "DEPOSIT");
+    const wallet = await addBalance(userId, amount, "ADMIN_CREDIT");
 
     res.json({
-      status: "credited",
+      message: "Wallet credited",
       balance: wallet.balance
     });
   })
 );
 
 /**
- * 🔗 CONNECT USER
+ * =========================
+ * WALLET
+ * =========================
  */
-app.post(
-  "/connect",
+app.get("/wallet/:userId",
+  authMiddleware,
   asyncHandler(async (req, res) => {
-    const { userId, token } = req.body;
+    const wallet = await getOrCreateWallet(req.params.userId);
 
-    validateConnect({ userId, token });
+    res.json(wallet);
+  })
+);
+
+/**
+ * =========================
+ * CONNECT
+ * =========================
+ */
+app.post("/connect",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+
+    const { userId, token } = req.body;
 
     const ws = createDerivConnection();
 
@@ -181,37 +208,27 @@ app.post(
 
     session.ws = ws;
 
-    log("CONNECT", "User connected", { userId });
-
-    res.json({
-      status: "connected",
-      userId,
-      account,
-      balance
-    });
+    res.json({ status: "connected", balance });
   })
 );
 
 /**
- * 📈 BUY TRADE
+ * =========================
+ * BUY
+ * =========================
  */
-app.post(
-  "/buy",
-  asyncHandler(async (req, res) => {
-    const { userId, amount, contractType, duration, symbol } = req.body;
+const activeTrades = new Set();
 
-    validateTrade({ userId, amount, symbol, duration });
+app.post("/buy",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+
+    const { userId, amount, contractType, duration, symbol } = req.body;
 
     const session = await getSession(userId);
     if (!session) throw new Error("No session");
 
-    if (!session.ws || session.ws.readyState !== 1) {
-      throw new Error("Connection lost. Reconnect required.");
-    }
-
-    if (activeTrades.has(userId)) {
-      throw new Error("Trade already in progress");
-    }
+    if (activeTrades.has(userId)) throw new Error("Trade locked");
 
     activeTrades.add(userId);
 
@@ -232,9 +249,8 @@ app.post(
         result: "pending"
       });
 
-      log("TRADE", "Buy executed", { userId, amount });
-
       res.json(result);
+
     } finally {
       activeTrades.delete(userId);
     }
@@ -242,22 +258,18 @@ app.post(
 );
 
 /**
- * 📉 SELL TRADE + 💰 WALLET UPDATE (STEP 5)
+ * =========================
+ * SELL
+ * =========================
  */
-app.post(
-  "/sell",
+app.post("/sell",
+  authMiddleware,
   asyncHandler(async (req, res) => {
-    const { userId, contractId } = req.body;
 
-    if (!userId) throw new Error("userId required");
-    if (!contractId) throw new Error("contractId required");
+    const { userId, contractId } = req.body;
 
     const session = await getSession(userId);
     if (!session) throw new Error("No session");
-
-    if (!session.ws || session.ws.readyState !== 1) {
-      throw new Error("Connection lost. Reconnect required.");
-    }
 
     const result = await sellTrade(session.ws, contractId);
 
@@ -265,40 +277,28 @@ app.post(
       { contractId },
       {
         result: result.profit > 0 ? "win" : "loss",
-        profit: result.profit || 0
+        profit: result.profit
       }
     );
 
-    /**
-     * 💰 WALLET UPDATE (STEP 5)
-     */
-    if (result.profit && result.profit !== 0) {
-      await addBalance(
-        userId,
-        result.profit,
-        result.profit > 0 ? "TRADE_PROFIT" : "TRADE_LOSS"
-      );
+    if (result.profit) {
+      await addBalance(userId, result.profit, "TRADE_RESULT");
     }
-
-    log("TRADE", "Sell executed", { userId, contractId });
 
     res.json(result);
   })
 );
 
 /**
- * ❌ GLOBAL ERROR HANDLER
+ * ❌ ERROR HANDLER
  */
 app.use((err, req, res, next) => {
   console.error("❌ ERROR:", err.message);
-
-  res.status(500).json({
-    error: err.message || "Internal Server Error"
-  });
+  res.status(500).json({ error: err.message });
 });
 
 /**
- * 🚀 START SERVER
+ * 🚀 START
  */
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
