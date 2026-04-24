@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 
+import { connectDB } from "./database.js"; // ✅ NEW
+
 import { createDerivConnection, authorizeUser, getBalance } from "./derivSocket.js";
 
 import {
@@ -29,6 +31,11 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (err) => {
   console.error("🔥 UNHANDLED PROMISE:", err);
 });
+
+/**
+ * 🧠 CONNECT DATABASE (MONGODB)
+ */
+connectDB(); // ✅ NEW LINE ADDED HERE
 
 /**
  * 🚦 RATE LIMIT (ANTI-SPAM)
