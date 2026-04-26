@@ -18,11 +18,28 @@ import { authMiddleware, adminMiddleware } from "./middleware/authMiddleware.js"
 const app = express();
 
 /**
- * ⚙️ MIDDLEWARE
+ * ⚙️ MIDDLEWARE (UPDATED FOR VERCEL)
  */
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://v0-simutrade.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  })
+);
+
 app.use(express.json());
-app.use(rateLimit({ windowMs: 60 * 1000, max: 30 }));
+
+app.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 30
+  })
+);
 
 const PORT = process.env.PORT || 10000;
 
@@ -39,21 +56,15 @@ const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
 /**
- * =========================
- * ✅ ROOT FIX (IMPORTANT)
- * =========================
+ * ✅ ROOT
  */
 app.get("/", (req, res) => {
   res.send("🚀 SimuTrade backend is live");
 });
 
 /**
- * =========================
- * 🔐 AUTH SYSTEM
- * =========================
+ * 🔐 AUTH
  */
-
-// REGISTER
 app.post("/register", asyncHandler(async (req, res) => {
   const { userId, password } = req.body;
 
@@ -73,7 +84,6 @@ app.post("/register", asyncHandler(async (req, res) => {
   res.json({ message: "User created" });
 }));
 
-// LOGIN
 app.post("/login", asyncHandler(async (req, res) => {
   const { userId, password } = req.body;
 
@@ -93,11 +103,8 @@ app.post("/login", asyncHandler(async (req, res) => {
 }));
 
 /**
- * =========================
  * 💰 WALLET
- * =========================
  */
-
 app.get("/wallet/:userId", asyncHandler(async (req, res) => {
   const wallet = await getOrCreateWallet(req.params.userId);
   res.json(wallet);
@@ -105,15 +112,12 @@ app.get("/wallet/:userId", asyncHandler(async (req, res) => {
 
 app.post("/wallet/deposit", adminMiddleware, asyncHandler(async (req, res) => {
   const { userId, amount } = req.body;
-
   const wallet = await addBalance(userId, amount, "ADMIN_DEPOSIT");
   res.json(wallet);
 }));
 
 /**
- * =========================
  * 🔗 CONNECT
- * =========================
  */
 app.post("/connect", authMiddleware, asyncHandler(async (req, res) => {
 
@@ -138,9 +142,7 @@ app.post("/connect", authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 /**
- * =========================
  * 📈 BUY
- * =========================
  */
 const activeTrades = new Set();
 
@@ -180,9 +182,7 @@ app.post("/buy", authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 /**
- * =========================
- * 📉 SELL + WALLET UPDATE
- * =========================
+ * 📉 SELL
  */
 app.post("/sell", authMiddleware, asyncHandler(async (req, res) => {
 
@@ -209,11 +209,8 @@ app.post("/sell", authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 /**
- * =========================
- * 👑 ADMIN ROUTES
- * =========================
+ * 👑 ADMIN
  */
-
 app.get("/admin/users", adminMiddleware, asyncHandler(async (req, res) => {
   const users = await User.find().select("-password");
   res.json(users);
@@ -233,7 +230,7 @@ app.use((err, req, res, next) => {
 });
 
 /**
- * 🚀 START SERVER
+ * 🚀 START
  */
 const start = async () => {
   try {
