@@ -127,12 +127,15 @@ app.get("/api/health", (req, res) => {
  * 🔥 DERIV CONNECT
  * ===================================
  */
-app.post("/api/deriv/connect", asyncHandler(async (req, res) => {
-  const { token } = req.body;
+app.get("/api/token", (req, res) => {
+  const token = process.env.DERIV_TOKEN
 
   if (!token) {
-    throw new Error("Token is required");
+    return res.status(500).json({ error: "Token not set" })
   }
+
+  res.json({ token })
+})
 
   let ws;
 
